@@ -2,7 +2,7 @@ import os
 import csv
 import time
 from groq import Groq
-from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, TrainingArguments, Trainer  # Updated import
 from datasets import Dataset
 from dotenv import load_dotenv  # Added import
 
@@ -12,16 +12,20 @@ load_dotenv()  # Added line
 # Configuration
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 HF_API_KEY = os.environ.get("HF_API_KEY")
-MODEL_NAME = "meta-llama/Meta-Llama-3-8B-Instruct" # Check latest model name
+MODEL_NAME = "llama-3.3-70b-versatile" # Check latest model name
 CSV_FILENAME = "qa_pairs.csv"
+number_of_qa_pairs = 200
 STUDENT_MODEL_NAME = "google/flan-t5-small"  # Student model for distillation
+
+Topics="Psychology"
+
 
 # Initialize Groq client
 client = Groq(api_key=GROQ_API_KEY)
 
 def generate_qa_pairs():
     qa_pairs = []
-    prompt = """Generate a diverse set of 100 question and answer pairs covering various topics.
+    prompt = f"""Generate a diverse set of {number_of_qa_pairs} question and answer pairs covering topics of {Topics}.
     Format should be:
     Q: [question]
     A: [answer]
@@ -46,7 +50,7 @@ def generate_qa_pairs():
             if q and a:
                 qa_pairs.append({"question": q, "answer": a})
     
-    return qa_pairs[:100]  # Ensure exactly 100 pairs
+    return qa_pairs[:number_of_qa_pairs]  # Ensure exactly number_of_qa_pairs pairs
 
 def save_to_csv(qa_pairs):
     with open(CSV_FILENAME, 'w', newline='') as csvfile:
@@ -61,7 +65,7 @@ def distill_model():
     
     # Load student model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(STUDENT_MODEL_NAME)
-    model = AutoModelForCausalLM.from_pretrained(STUDENT_MODEL_NAME)
+    model = AutoModelForSeq2SeqLM.from_pretrained(STUDENT_MODEL_NAME)  # Updated model class
     
     # Tokenization function
     def tokenize_function(examples):

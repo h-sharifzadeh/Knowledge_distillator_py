@@ -1,2 +1,4 @@
 # ...existing code...
-#.env
+.env
+results
+qa_pairs.csv
